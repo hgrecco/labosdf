@@ -24,7 +24,10 @@ voltoffset = float(osci.query(":CHAN1:OFFS?"))
 
 # Escala de tiempo
 timescale = float(osci.query(":TIM:SCAL?"))
- 
+# Sample rate
+sample_rate = float(osci.query(":ACQ:SAMP?"))
+
+
 # Offset de tiempo
 timeoffset = float(osci.query(":TIM:OFFS?"))
 
@@ -39,15 +42,15 @@ osci.write(':STOP')
 data = osci.query_binary_values(':WAV:DATA? CHAN1', datatype='B', container=np.array)
 
 divisions = 12 * 6
-tiempo = timeoffset + np.linspace(-timescale * divisions / 2 , timescale * divisions /2, num=len(data))
+tiempo = timeoffset - np.arange(len(data)) / (1. / 2. * sample_rate)
 
 
 # Convierte los datos de Unidades digitales a Volts
-data = (125 - data) * voltscale / 25 - voltoffset
+data = (240 - data) * voltscale / 25 - (voltoffset + voltscale * 4.6)
  
-plt.plot(tiempo, data);
-plt.xlabel('Tiempo [s]');
-plt.ylabel('Voltaje [V]');
+plt.plot(tiempo, data)
+plt.xlabel('Tiempo [s]')
+plt.ylabel('Voltaje [V]')
 
 
 # Si vas a repetir la adquisicion muchas veces sin cambiar la escala
@@ -71,11 +74,10 @@ def definir_medir(inst):
         data = inst.query_binary_values(':WAV:DATA? CHAN1', datatype='B', container=np.array)
 
         divisions = 12 * 6
-        tiempo = timeoffset + np.linspace(-timescale * divisions / 2 , timescale * divisions /2, num=len(data))
-
+        tiempo = timeoffset - np.arange(len(data)) / (1. / 2. * sample_rate)
 
         # Convierte los datos de Unidades digitales a Volts
-        data = (125 - data) * voltscale / 25 - voltoffset
+        data = (240 - data) * voltscale / 25 - (voltoffset + voltscale * 4.6)
         return tiempo, data
     
     # Devolvemos la funcion auxiliar que "sabe" la escala
