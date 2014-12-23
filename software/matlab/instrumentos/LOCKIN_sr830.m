@@ -2,6 +2,9 @@
 disp('LOCKIN SR830')
 disp('MANUAL: http://www.thinksrs.com/downloads/PDFs/Manuals/SR830m.pdf')
 
+%muestro la lista de equipos disponibles, y el string de inicializacion
+out=busco_equipos
+
 %inicializo el lockin, conectado con la interfase USB - GPIB
 li = gpib('ni',0,8);
 

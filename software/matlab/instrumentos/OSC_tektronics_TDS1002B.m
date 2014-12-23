@@ -2,6 +2,9 @@
 
 disp('Osciloscopio Tektronics TDS 1002B')
 
+%muestro la lista de equipos disponibles, y el string de inicializacion
+out=busco_equipos
+
 vu = visa('tek','USB0::0x0699::0x0363::C065088::INSTR');
 
 %incrementa el tamaño del buffer
