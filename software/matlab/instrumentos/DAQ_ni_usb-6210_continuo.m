@@ -1,9 +1,12 @@
 %% inicializo la comunicacion con la placa
 
-%para saber como se llama la placa. Típicamente Dev6 o Dev7
-hw=daqhwinfo('nidaq')
-hw.InstalledBoardIds
-hw.ObjectConstructorName'
+% %para saber como se llama la placa. Típicamente Dev6 o Dev7
+% hw=daqhwinfo('nidaq')
+% hw.InstalledBoardIds
+% hw.ObjectConstructorName'
+
+%muestro la lista de equipos disponibles, y el string de inicializacion
+out=busco_equipos
 
 %inicializo la comunicacion y el canal
 ai = analoginput('nidaq','Dev7');%inicializo la conexion (uso DevX sacada de las lineas anteriores)
