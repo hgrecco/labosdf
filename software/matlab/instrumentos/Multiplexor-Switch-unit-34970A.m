@@ -12,6 +12,8 @@
 %MANUAL Agilent 34980A:
 %http://www.keysight.com/upload/cmc_upload/All/34980-90001_Ed3.pdf?&cc=AR&lc=eng
 
+%muestro la lista de equipos disponibles, y el string de inicializacion
+out=busco_equipos
 
 %si esta conectado con puerto RS-232
 mux= serial('COM1');

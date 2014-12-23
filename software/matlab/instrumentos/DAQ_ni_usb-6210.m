@@ -3,12 +3,14 @@
 disp('NI USB-6210')
 disp('MANUAL: ')
 
-%para saber que aparatos hay conectados
-hw = daqhwinfo('nidaq'); 
-disp(hw)
-hw.InstalledBoardIds
-hw.BoardNames
+% %para saber que aparatos hay conectados
+% hw = daqhwinfo('nidaq'); 
+% disp(hw)
+% hw.InstalledBoardIds
+% hw.BoardNames
 
+%muestro la lista de equipos disponibles, y el string de inicializacion
+out=busco_equipos
 
 ai = analoginput('nidaq','Dev3');%inicializo la conexion (uso DevX sacada de las lineas anteriores)
 addchannel(ai, 0:2);%agrego canales (ver manual)
