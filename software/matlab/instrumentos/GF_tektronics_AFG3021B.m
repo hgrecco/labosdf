@@ -3,6 +3,8 @@
 disp('Generador de funciones Tektronics AFG 3021B')
 disp('MANUAL: www.pd.infn.it/~zotto/laboratorio/AFG3000.pdf?')
 
+%muestro la lista de equipos disponibles, y el string de inicializacion
+out=busco_equipos
 
 %reconoce al generador
 gf = visa('ni','USB0::0x0699::0x0346::C034165::INSTR');
