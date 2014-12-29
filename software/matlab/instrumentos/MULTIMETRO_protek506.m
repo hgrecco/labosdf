@@ -9,6 +9,9 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 clear all;
 
+%muestro la lista de equipos disponibles, y el string de inicializacion
+out=busco_equipos
+
 s2=serial('COM1','BaudRate',1200,'DataBits',7,'StopBits',2,'Parity','none','terminator','CR');
 fopen(s2);
 set(s2,'terminator','CR');
