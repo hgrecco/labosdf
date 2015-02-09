@@ -1,22 +1,30 @@
 # -*- coding: utf-8 -*-
+"""
+Multimetro Agilent 34401A
+Manual (web): https://github.com/hgrecco/labosdf-bin/raw/master/manuals/Agilent 34401.pdf
+Manual (local): \\Srvlabos\manuales\Agilent\Agilent 34401.pdf
+"""
 
 from __future__ import division, unicode_literals, print_function, absolute_import
 
-from matplotlib import pyplot as plt
-import numpy as np
-
 import visa
+
+print(__doc__)
+
+# Este string determina el intrumento que van a usar.
+# Lo tienen que cambiar de acuerdo a lo que tengan conectado.
+resource_name = 'GPIB0::22::INSTR'
+
 
 rm = visa.ResourceManager()
 
-print(rm.list_resources())
-
-resource_name = 'GPIB0::22::INSTR'
 mult = rm.open_resource(resource_name)
 
-mult.query('*IDN?')
+print(mult.query('*IDN?'))
 
-dc = float(mult.query('measure:voltage:DC?'))
+dc = float(mult.query('MEASURE:VOLTAGE:DC?'))
+
+print(dc)
 
 mult.close()
 

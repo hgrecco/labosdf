@@ -1,4 +1,11 @@
 # -*- coding: utf-8 -*-
+"""
+Osciloscopio Tektronix TDS1002B')
+Manual U (web): https://github.com/hgrecco/labosdf-bin/raw/master/manuals/TDS1002 Manual.pdf
+Manual P (web): https://github.com/hgrecco/labosdf-bin/raw/master/manuals/TDS 100-1000-2000_prog.pdf
+Manual U (local): \\Srvlabos\manuales\Tektronix\TDS1002 Manual.pdf
+Manual P (local): \\Srvlabos\manuales\Tektronix\TDS 200-1000-2000_prog.pdf
+"""
 
 from __future__ import division, unicode_literals, print_function, absolute_import
 
@@ -6,14 +13,17 @@ import time
 
 from matplotlib import pyplot as plt
 import numpy as np
-
 import visa
+
+print(__doc__)
+
+# Este string determina el intrumento que van a usar.
+# Lo tienen que cambiar de acuerdo a lo que tengan conectado.
+resource_name = 'USB0::0x0699::0x0363::C102220::INSTR'
+
 
 rm = visa.ResourceManager()
 
-print(rm.list_resources())
-
-resource_name = 'USB0::0x0699::0x0363::C102220::INSTR'
 osci = rm.open_resource(resource_name)
 
 osci.query('*IDN?')

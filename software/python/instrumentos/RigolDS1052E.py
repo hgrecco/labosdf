@@ -1,4 +1,11 @@
 # -*- coding: utf-8 -*-
+"""
+Osciloscopio Tektronix TDS1002B')
+Manual U (web): https://github.com/hgrecco/labosdf-bin/raw/master/manuals/RigolDS1000_user.pdf
+Manual P (web): https://github.com/hgrecco/labosdf-bin/raw/master/manuals/RigolDS1000_prog.pdf
+Manual U (local): \\Srvlabos\manuales\Rigol\RigolDS1000_user.pdf
+Manual P (local): \\Srvlabos\manuales\Rigol\RigolDS1000_prog.pdf
+"""
 
 from __future__ import division, unicode_literals, print_function, absolute_import
 
@@ -7,14 +14,18 @@ import numpy as np
 
 import visa
 
+print(__doc__)
+
+# Este string determina el intrumento que van a usar.
+# Lo tienen que cambiar de acuerdo a lo que tengan conectado.
+resource_name = 'USB0::0x1AB1::0x0588::DS1K00005888::INSTR'
+
 rm = visa.ResourceManager()
 
-print(rm.list_resources())
-
-resource_name = 'USB0::0x1AB1::0x0588::DS1K00005888::INSTR'
 osci = rm.open_resource(resource_name)
 
-osci.query('*IDN?')
+# Pide identificacion
+print(osci.query('*IDN?'))
 
 # Escala de voltaje
 voltscale = float(osci.query(":CHAN1:SCAL?"))

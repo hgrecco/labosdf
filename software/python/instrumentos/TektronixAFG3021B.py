@@ -1,22 +1,31 @@
 # -*- coding: utf-8 -*-
+"""
+Generador de funciones Tektronix AFG 3021B')
+Manual U (web): https://github.com/hgrecco/labosdf-bin/raw/master/manuals/TektronixAFG3000.pdf
+Manual P (web): https://github.com/hgrecco/labosdf-bin/raw/master/manuals/TektronixAFG3000_p.pdf
+Manual U (local): \\Srvlabos\manuales\Tektronix\AFG3012B (M Usuario).pdf
+Manual P (local): \\Srvlabos\manuales\Tektronix\AFG3012B (Prog Manual).pdf
+"""
 
 from __future__ import division, unicode_literals, print_function, absolute_import
 
 import time
 
-from matplotlib import pyplot as plt
 import numpy as np
-
 import visa
+
+print(__doc__)
+
+# Este string determina el intrumento que van a usar.
+# Lo tienen que cambiar de acuerdo a lo que tengan conectado.
+resource_name = 'USB0::0x0699::0x0346::C034165::INSTR'
 
 rm = visa.ResourceManager()
 
-print(rm.list_resources())
-
-resource_name = 'USB0::0x0699::0x0346::C034165::INSTR'
+# Abre la sesion VISA de comunicacion
 fungen = rm.open_resource(resource_name)
 
-fungen.query('*IDN?')
+print(fungen.query('*IDN?'))
 
 # Rampa logaritmica de frequencias 
 # Los dos primeros numeros (1 y 3) indican los exponentes de los limites(10^1 y 10^3)
