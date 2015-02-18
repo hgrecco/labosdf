@@ -22,5 +22,6 @@ except ImportError:
 
 rm = visa.ResourceManager()
 
-print('Los instrumentatos/puertos detectados son:')
-print(rm.list_resources())
+print('Los instrumentatos/puertos detectados son:\n')
+for name in rm.list_resources():
+    print(repr(name))

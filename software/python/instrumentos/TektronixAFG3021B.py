@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Generador de funciones Tektronix AFG 3021B')
+Generador de funciones Tektronix AFG 3021B
 Manual U (web): https://github.com/hgrecco/labosdf-bin/raw/master/manuals/TektronixAFG3000.pdf
 Manual P (web): https://github.com/hgrecco/labosdf-bin/raw/master/manuals/TektronixAFG3000_p.pdf
 Manual U (local): \\Srvlabos\manuales\Tektronix\AFG3012B (M Usuario).pdf
@@ -18,7 +18,7 @@ print(__doc__)
 
 # Este string determina el intrumento que van a usar.
 # Lo tienen que cambiar de acuerdo a lo que tengan conectado.
-resource_name = 'USB0::0x0699::0x0346::C034165::INSTR'
+resource_name = 'USB0::0x0699::0x0346::C033250::INSTR'
 
 rm = visa.ResourceManager()
 

@@ -5,7 +5,7 @@ disp('MANUAL: https://github.com/hgrecco/labosdf-bin/raw/master/manuals/Tektroni
 
 % Este string determina el intrumento que van a usar.
 % Lo tienen que cambiar de acuerdo a lo que tengan conectado.
-resource_name = 'USB0::0x0699::0x0346::C034165::INSTR'
+resource_name = 'USB0::0x0699::0x0346::C033250::INSTR';
 
 fungen = visa('ni', resource_name);
 
@@ -15,7 +15,7 @@ fopen(fungen);
 % Rampa logaritmica de frequencias
 % Los dos primeros numeros (1 y 3) indican los exponentes de los limites(10^1 y 10^3)
 % El siguiente el numero de pasos
-FREQ=logspace(1, 3, 20)
+FREQ=logspace(1, 3, 20);
 for i=1:(length(FREQ))
     str=sprintf('FREQ %f',FREQ(i));
     fprintf(fungen,str);
@@ -40,4 +40,4 @@ end
 
 
 % cierra la sesion VISA de comunicacion.
-fclose(gf);
+fclose(fungen);

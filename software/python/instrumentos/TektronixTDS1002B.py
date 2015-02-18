@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Osciloscopio Tektronix TDS1002B')
+Osciloscopio Tektronix TDS1002B
 Manual U (web): https://github.com/hgrecco/labosdf-bin/raw/master/manuals/TDS1002 Manual.pdf
 Manual P (web): https://github.com/hgrecco/labosdf-bin/raw/master/manuals/TDS 100-1000-2000_prog.pdf
 Manual U (local): \\Srvlabos\manuales\Tektronix\TDS1002 Manual.pdf
@@ -19,7 +19,7 @@ print(__doc__)
 
 # Este string determina el intrumento que van a usar.
 # Lo tienen que cambiar de acuerdo a lo que tengan conectado.
-resource_name = 'USB0::0x0699::0x0363::C102220::INSTR'
+resource_name = 'USB0::0x0699::0x0363::C065089::INSTR'
 
 
 rm = visa.ResourceManager()

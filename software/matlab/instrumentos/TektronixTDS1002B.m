@@ -5,7 +5,7 @@ disp('Osciloscopio Tektronics TDS 1002B')
 
 % Este string determina el intrumento que van a usar.
 % Lo tienen que cambiar de acuerdo a lo que tengan conectado.
-resource_name = 'USB0::0x0699::0x0346::C034165::INSTR'
+resource_name = 'USB0::0x0699::0x0363::C065089::INSTR'
 
 vu = visa('ni', resource_name);
 
