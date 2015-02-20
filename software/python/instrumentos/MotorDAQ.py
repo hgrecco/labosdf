@@ -54,9 +54,13 @@ class DigitalOutput:
         # int32 DAQmxCreateTask (const char taskName[], TaskHandle *taskHandle);
         CHK(nidaq.DAQmxCreateTask(b"", ctypes.byref(self.task)))
 
+
+        if isinstance(device, int):
+            device = "Dev%d/port0/line0:3" % device
+
         # int32 DAQmxCreateDOChan (TaskHandle taskHandle, const char lines[],
         #                          const char nameToAssignToLines[], int32 lineGrouping);
-        CHK(nidaq.DAQmxCreateDOChan(self.task, bytes("Dev%d/port0/line0:3" % device, "utf-8"), b"", 1),
+        CHK(nidaq.DAQmxCreateDOChan(self.task, bytes(device, "utf-8"), b"", 1),
             "Es posible que la placa de adquisición no este conectada o el numero de dispositivo "
             "sea incorrecto. Verificalo con el NI-MAX Measurement and Automation.")
 
@@ -82,19 +86,32 @@ class DigitalOutput:
 
 ### --- Clase que abstrae el funcionamiento del motor por pasos ----
 
+# El objeto motor lleva la cuenta de los pasos dados.
+# Esto permite mover a posiciones absolutas una vez definida
+# la posicion actual. Si se borra el objeto motor entre una
+# medicion y la siguiente hay que volver a definir la posicion
+# actual.
 
-class Singleton(type):
-    """Esta clase sirve para evitar crear un objeto Motor cada vez.
-    Si ya existe, lo reutilizamos.
-    """
-    _instances = {}
-    def __call__(cls, *args, **kwargs):
-        if cls not in cls._instances:
-            cls._instances[cls] = super(Singleton, cls).__call__(*args, **kwargs)
-        return cls._instances[cls]
+# Ademas para un dado motor paso a paso no queremos crear mas de una
+# instancia del objeto Motor porque:
+# - usarian el mismo recurso (DAQ)
+# - cada uno llevaria una cuenta independiente de los pasos dados.
+
+# Al utilizar spyder, el "workspace" tiene memoria de los objetos
+# creados.
+
+# La forma usual seria crear un registro de los objetos creados
+# y devolver el objeto existente en un modulo que se importa.
+# Pero es comun usando Spyder poner todo en un solo archivo.
+# lo que sigue es una forma evitar crear muchos objetos motor
+# y no es relevante para entender la adquisicion.
+try:
+    _MOTOR_INSTANCES
+except NameError:
+    _MOTOR_INSTANCES = {}
 
 
-class Motor(metaclass=Singleton):
+class Motor:
 
     # Secuencia del motor a utilizar. Puede cambiar para otro tipo de motor.
     SECUENCIA = ((True, True, True, True),
@@ -105,18 +122,25 @@ class Motor(metaclass=Singleton):
                  
     # Tiempo de espera en segundos despues de dar el paso.
     ESPERA = .1
-        
-    def __init__(self, posicion_actual=0):
-           
+
+    def __new__(cls, device, posicion_actual=0):
+
+        if device in _MOTOR_INSTANCES:
+            return _MOTOR_INSTANCES[device]
+
+        _MOTOR_INSTANCES[device] = obj = super().__new__(cls)
+
         # Posicion absoluta
-        self.posicion = posicion_actual
+        obj.posicion = posicion_actual
         
         # Numero de paso del motor dentro de la secuencia.
-        self._paso_motor = 0
+        obj._paso_motor = 0
       
-        self._do = DigitalOutput() 
+        obj._do = DigitalOutput(device)
 
-        self._actualizar_do()    
+        obj._actualizar_do()
+
+        return obj
     
     def _actualizar_do(self):
         """Actualiza los valores de la salida digital.
@@ -188,7 +212,7 @@ class Motor(metaclass=Singleton):
 
 if __name__ == '__main__':
 
-    motor = Motor()
+    motor = Motor(device=8)
 
     # Barrer un rango (en posiciones absolutas)
     for posicion in motor.barrer(5, 20):
@@ -199,9 +223,11 @@ if __name__ == '__main__':
     for n in range(10):
         motor.siguiente()
 
-    print('La posicion actual es: %d', motor.posicion)
+    print('La posicion actual es: %d' % motor.posicion)
 
     # Define cual es la posicion absoluta actual
-    pos = input('Cual es la posicion actual (default %d)?' % motor.posicion)
+    pos = input('Cual es la posicion actual (default %d)? ' % motor.posicion)
     if pos is not None:
         motor.posicion = int(pos)
+
+    print('La posicion actual es: %d' % motor.posicion)
