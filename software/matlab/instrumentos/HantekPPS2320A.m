@@ -33,6 +33,8 @@
 % rs	Read CH1 state
 % rb	Read CH3 state
 	
+%muestro la lista de equipos disponibles, y el string de inicializacion
+out=busco_equipos
 
 s = serial('COM3');
 %tambien funciona abriendo sesión Visa:

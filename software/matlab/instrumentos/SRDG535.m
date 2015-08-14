@@ -5,8 +5,8 @@
 % cable GPIB entre el equipo y la PC.                                     %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-
-clear
+%muestro la lista de equipos disponibles, y el string de inicializacion
+out=busco_equipos
 
 gn=visa('agilent','GPIB0::15::INSTR');  
 %la direccion gpib (15) se puede cambiar desde el panel frontal

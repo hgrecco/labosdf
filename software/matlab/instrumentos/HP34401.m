@@ -3,6 +3,8 @@
 disp('Multimetro HP 34401')
 disp('MANUAL: http://www.physics.rutgers.edu/ugrad/327/HP34401.pdf')
 
+%muestro la lista de equipos disponibles, y el string de inicializacion
+out=busco_equipos
 
 %reconoce al multimetro
 vu = visa('ni','GPIB1::22::INSTR');
