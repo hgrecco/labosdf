@@ -2,77 +2,74 @@ function out=busco_equipos
 %busca todas las interfases de comunicacion, equipos y placas de adquisicion
 %   y genera una lista de equipos disponibles, con su string de inicializacion
 
-out={};%aca voy a poner todos nombres de los equipos disponibles
-showoutput=1;%[0|1], si quiero que muestre el detalle de las interfases y eso
+fprintf('Información de instrumentos conectados (instrhwinfo):\n')
 
 %informacion de Instrumentos
 hw=instrhwinfo; %busco las interfases disponibles (visa, gpib, serial, etc)
-
-%para cada interfase
-for indinterfase=1:length(hw.SupportedInterfaces)
-    
+out={};%aca voy a poner todos nombres de los equipos disponibles
+for indinterfase=1:length(hw.SupportedInterfaces)    
     interfase=hw.SupportedInterfaces{indinterfase};%'visa' o 'gpib' o 'serial' o ...
+    fprintf('\tObjetos disponibles en:  hw=instrhwinfo(''%s'')\n',interfase)
     
-    % me fijo los objetos (equipos) disponibles en esta interfase
-    hwif=instrhwinfo(interfase);
-
-    if showoutput
-        fprintf('Objetos disponibles en la interfase %s:\n',interfase)
+    % busco objetos (equipos) disponibles en esta interfase
+    hwif=instrhwinfo(interfase);    
+    temp=busco_ObjectConstructorName(hwif);
+    out=[out;temp]; %#ok<*AGROW>
+    
+    % busco objetos (equipos) disponibles en cada adaptador de esta interfase
+    if isfield(hwif,'InstalledAdaptors')
+        adaptors=hwif.InstalledAdaptors;
+        if ~iscell(adaptors);adaptors={adaptors};end%pues si es uno solo, devuelve un string en lugar de una celda!
+        for indad=1:length(adaptors)    
+            adaptor=adaptors{indad};
+            fprintf('\tObjetos disponibles en:  hw=instrhwinfo(''%s'',''%s'')\n',interfase,adaptor)
+            % me fijo los objetos (equipos) disponibles en este adaptador
+            hwad=instrhwinfo(interfase,adaptor);            
+            temp=busco_ObjectConstructorName(hwad);
+            out=[out;temp];
+        end
     end
     
-    %si hay objetos disponibles, los muestro y guardo el nombre
-    if isfield(hwif,'ObjectConstructorName')
-        for indobject=1:length(hwif.ObjectConstructorName)
-            if showoutput
-                fprintf('\t%s\n',hwif.ObjectConstructorName{indobject})
-            end
-            out=[out; hwif.ObjectConstructorName{indobject}];%agrego el constructorname
-        end
-    else
-        if showoutput
-            fprintf('\t%s\n','Nada')
-        end
-    end
 end
 
 
+
+fprintf('\n')
+fprintf('Información de hardware de Adquisición de datos (daqhwinfo):\n')
 %informacion de Adquisicion de datos
-try 
-    hw=daqhwinfo; %busco las interfases disponibles (visa, gpib, serial, etc)
-catch ME
-    %ME
-    disp('daqhwinfo falla en Matlab 64bit')
+if(strcmp(computer,'PCWIN64'))
+    fprintf('\tOJO: daqhwinfo falla en Matlab 64bit\n')
     return
-end  
-
-%para cada Adaptador
-for indinterfase=1:length(hw.InstalledAdaptors)
-    
-    interfase=hw.InstalledAdaptors{indinterfase};%'visa' o 'gpib' o 'serial' o ...
-
-    % me fijo los objetos (equipos) disponibles en este Adaptador
-    try 
-        hwif=daqhwinfo(interfase);
-    catch %pongo esto porque a veces 'parallel' falla
-        continue
-    end
-    
-    if showoutput
-        fprintf('Objetos disponibles en la interfase %s:\n',interfase)
-    end
-
-    %si hay objetos disponibles, los muestro y guardo el nombre
-    if isfield(hwif,'ObjectConstructorName')
-        for indobject=1:length(hwif.ObjectConstructorName)
-            if showoutput
-                fprintf('\t%s\n',hwif.ObjectConstructorName{indobject})
-            end
-            out=[out; hwif.ObjectConstructorName{indobject}];%agrego el constructorname
-        end
-    else
-        if showoutput
-            fprintf('\t%s\n','Nada')
-        end
+else
+    hw=daqhwinfo;
+    %para cada Adaptador
+    for indad=1:length(hw.InstalledAdaptors)
+        
+        adaptor=hw.InstalledAdaptors{indad};%'visa' o 'gpib' o 'serial' o ...
+        fprintf('\tObjetos disponibles en:  hw=daqhwinfo(''%s'')\n',adaptor)       
+        try%pongo esto porque a veces 'parallel' falla, y tambien 'mcc'
+            % me fijo los objetos (equipos) disponibles en este Adaptador
+            hwif=daqhwinfo(adaptor);
+        catch  %#ok<CTCH>
+            fprintf('\t\tOJO: daqhwinfo(''%s'') devuelve error.\n',adaptor)       
+            continue
+        end                
+        
+        temp=busco_ObjectConstructorName(hwif);
+        out=[out;temp];        
     end
 end
+end
+
+function out=busco_ObjectConstructorName(hw)
+%si hay objetos disponibles, los muestro y guardo el nombre
+out={};
+if isfield(hw,'ObjectConstructorName')
+    for indobject=1:length(hw.ObjectConstructorName)
+        if ~isempty(hw.ObjectConstructorName{indobject})
+            fprintf('\t\t%s\n',hw.ObjectConstructorName{indobject})
+            out=[out; hw.ObjectConstructorName{indobject}];%agrego el constructorname            
+        end
+    end
+end        
 end
