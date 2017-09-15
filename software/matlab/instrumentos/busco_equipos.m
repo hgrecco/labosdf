@@ -21,7 +21,7 @@ for indinterfase=1:length(hw.SupportedInterfaces)
     end
     
     %si hay objetos disponibles, los muestro y guardo el nombre
-    if isfield(hwif,'ObjectConstructorName')
+    if isprop(hwif,'ObjectConstructorName')
         for indobject=1:length(hwif.ObjectConstructorName)
             if showoutput
                 fprintf('\t%s\n',hwif.ObjectConstructorName{indobject})
@@ -62,7 +62,7 @@ for indinterfase=1:length(hw.InstalledAdaptors)
     end
 
     %si hay objetos disponibles, los muestro y guardo el nombre
-    if isfield(hwif,'ObjectConstructorName')
+    if isprop(hwif,'ObjectConstructorName')
         for indobject=1:length(hwif.ObjectConstructorName)
             if showoutput
                 fprintf('\t%s\n',hwif.ObjectConstructorName{indobject})
