@@ -4,18 +4,10 @@
 %%% que es necesario procesar para interpretar información de medida, 
 %%% unidades, signo, etc. Eso se hace dentro de la función Amprobe38XRA.m
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-clear all;
 
 s=serial('COM1','BaudRate',9600,'DataBits',8,'StopBits',1,'Parity','none');
 set(s,'terminator','CR','InputBufferSize',15,'ReadAsyncMode','manual');
 fopen(s);
-
-disp('Me falta:')
-disp('-ver el valor cuando da Overload, puede ser nan')
-disp('-ver absrel en algunos modos que parece no tener efecto, o no mostrarse, como freq y capacity, y ver en temperatura')
-disp('-ver str(8) en ''0C'' 	% Voltmeter   ')
-disp('-ver temperatura negativa, el signo')
-
 
 %% MEDICION SIMPLE
 verbose=1;
@@ -40,8 +32,7 @@ for i=1:ndata
     drawnow
 end
 
-
-%%
+%% Cierre de la conexion 
 fclose(s);
     
     
