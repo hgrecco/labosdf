@@ -29,6 +29,11 @@ end
 %lee el string que manda el multimetro
 [str, count]=LeeStringAmprobe(s); 
 
+if isempty(str)
+    Ylab = ''; value = nan; str = ''; count = nan;
+    return
+end
+
 %Procesa el string, interpreta el valor, la medida, etc.
 [ Ylab , value ] = ProcesaStringAmprobe(str,verbose);
 
@@ -49,6 +54,10 @@ str='';
 while length(str)~=15 %si no tiene 15 caracteres, lo vuelve a medir
     count=count+1;%para saber cuantas veces entró en el loop
     str=fscanf(s);
+    if isempty(str)
+        fprintf('Salgo, probablemente timeout, desconectado')
+        return
+    end    
 end
 
 %le saco el primer y ultimo caracter, que es un char raro.
@@ -104,9 +113,9 @@ switch code,
         if absrel==8;
             Ylab = 'Delta(Voltage)';
         end
-        if hex2dec(str(8))> 8;
-            Ylab= [Ylab ,' AC +'];
-        end  % mode AC+DC 
+%         if modo == 1%hex2dec(str(8))> 8;
+%             Ylab= [Ylab ,' AC +'];
+%         end  % mode AC+DC 
        
         Ylab = [Ylab ,' DC [V]'];
         value = (-1)^(signo)*data*(1e-4)*(10^exponente); % [V]
@@ -124,7 +133,7 @@ switch code,
             case 2
                 Ylab = [Ylab ' AC+DC'];
         end
-        value = data*1e-8*10^exponente;	% [A]
+        value = (-1)^(signo)*data*1e-8*10^exponente;	% [A]
         
     case '0E'	% mA
         Ylab = 'Current';
@@ -140,7 +149,7 @@ switch code,
                 Ylab = [Ylab ' AC+DC'];
         end
         Ylab = [Ylab ' [A]'];
-        value = data*1e-6*10^exponente; % [A]
+        value = (-1)^(signo)*data*1e-6*10^exponente; % [A]
         
     case '0A' 	% 10 A
         Ylab = 'Current';
@@ -153,35 +162,36 @@ switch code,
                 Ylab = [Ylab ' AC+DC'];
         end
         Ylab = [Ylab ' [A]'];
-        value = data/1000. ;             % [A]
+        value = (-1)^(signo)*data/1000. ;             % [A]
         
     case '06'	% Temperature [°C]
         Ylab = 'Temperature [°C]';
-        value = data;
+        value = (-1)^(signo)*data;
         % ABS/REL has no effect
         
     case '0F',	% Frequencemeter
         if modo == 2
             Ylab  = 'Cyclic Rate [%]';      % Rapport cyclique
-            value = data*0.01;            % [%]
+            value = (-1)^(signo)*data*0.01*10^exponente;            % [%]
         else
             Ylab = 'Frequency [Hz]';
-            % if absrel==8, Ylab='\Delta(Frequency) [Hz]'; end
+            if absrel==8, Ylab='Delta(Frequency) [Hz]'; end
             % absrel passe aussi à 8 en absolu lors des changements de calibre...
             % parece que tambien se pone en 8 en el modo aboluto... ver...
-            value = data*0.01*10^exponente;    % [Hz]
+            value = (-1)^(signo)*data*0.01*10^exponente;    % [Hz]
         end
         
     case '08',	% Ohm-meter
         Ylab  = 'Resistance [Ohm]';
-        value = data*1.0*10^(4-exponente);    % [Ohm]
+        if absrel==8, Ylab='Delta(Resistance) [Ohm]'; end
+        value = (-1)^(signo)*data*1.0*10^(4-exponente);    % [Ohm]
         
     case '0B',	% Capacity
         Ylab = 'Capacity [µF]';
-        % if absrel==8, Ylab='\Delta(Capacity) [µF]'; end
+        if absrel==8, Ylab='Delta(Capacity) [µF]'; end
         % absrel passe aussi à 8 en absolu lors des changements de calibre...
         % parece que tambien se pone en 8 en el modo aboluto... ver...
-        value = data*1e-5*10^exponente;    % [µF]
+        value = (-1)^(signo)*data*1e-5*10^exponente;    % [µF]
         
     case '03',	% mA 4-20 --			% [mA]
         Ylab ='Current 4-20 [mA] --';
@@ -190,13 +200,13 @@ switch code,
         
     case '02',	% Temperature [°F]
         Ylab  = 'Temperature [°F]';
-        value = data;
+        value = (-1)^(signo)*data;
         % ABS/REL has no effect
         
     case '04',	% Test diode
         Ylab  = 'Test diode [V]';
         value = data/1000.;
-        % ABS/REL has no effect
-        
+        % ABS/REL has no effect        
 end
+
 end

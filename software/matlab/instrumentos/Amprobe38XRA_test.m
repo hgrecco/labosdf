@@ -7,7 +7,7 @@
 clear all;
 
 s=serial('COM1','BaudRate',9600,'DataBits',8,'StopBits',1,'Parity','none');
-set(s,'terminator','CR','InputBufferSize',20000,'ReadAsyncMode','manual');
+set(s,'terminator','CR','InputBufferSize',15,'ReadAsyncMode','manual');
 fopen(s);
 
 disp('Me falta:')
@@ -29,7 +29,7 @@ medicion=nan(ndata,1);
 tiempo=medicion;
 tic
 for i=1:ndata
-    [ Ylab , value ,str, count] = Amprobe38XRA(s);
+    [ Ylab , value ,str, count] = Amprobe38XRA(s,1);
     texto=sprintf('Valor: %g\nUnidades: %s\nstr: %s\ncount:%d\ni: %d',value,Ylab,str,count,i);
     medicion(i)=value;
     tiempo(i)=toc;
@@ -48,4 +48,3 @@ fclose(s);
     
    
    
-
