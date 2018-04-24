@@ -1,0 +1,17 @@
+1- Instalar el software del espectrómetro (o ya debería estar instalado). 
+
+2- Instalar MinGW64 en Matlab (extraído de https://la.mathworks.com/matlabcentral/fileexchange/52848-matlab-support-for-mingw-w64-c-c++-compiler). 
+
+	a) Run "tdm64-gcc-4.9.2.exe" (or download from https://freefr.dl.sourceforge.net/project/tdm-gcc/TDM-GCC%20Installer/Previous/1.1309.0/tdm64-gcc-4.9.2.exe) and install to the "C:\TDM-GCC-64" folder.
+	b) https://www.mathworks.com/help/matlab/matlab_external/compiling-c-mex-files-with-mingw.html 
+	c) In matlab call the setenv('MW_MINGW64_LOC','C:\TDM-GCC-64') 
+	d) In matlab call the mex -setup
+
+3- Reemplazar el archivo "visatype.h" en " C:\Program Files\IVI Foundation\VISA\Win64\Include" (o seguir las instrucciones en el PDF adjunto para modificarlo).
+
+4- Abrir "spectrometer.m" y configurar el ID del espectrómetro, siguiendo el PDF adjunto.
+
+5- Listo! 
+
+
+Diego Shalom - 24/4/2018
