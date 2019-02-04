@@ -11,46 +11,53 @@ from instrumentos import Osciloscopio
 
 # Ingresa el path para guardar los datos
 
-def adquirirDatos(path, N, escalaT=100E-6, escalaV=10E-3):
+def adquirirDatos(path, N, escalaT=100E-6, escalaV=10E-3, guardar_eventos=False):
     """
     Adquiere N ventanas de osciloscopio con la escala especificada
 
-    :param path: directorio de trabajo
-    :param N: número de mediciones a realizar
-    :param escalaT: escala de tensión a setear en el osciloscopio
-    :param escalaV: Tiempo de medición. Tiempo en qué integra el osciloscopio. Considerar coherencia
+    :param path: directorio de trabajo.
+    :param N: numero de mediciones a realizar.
+    :param escalaT: escala de tension a setear en el osciloscopio.
+    :param escalaV: Tiempo de medicion. Tiempo en qué integra el osciloscopio. Considerar coherencia.
+    :param guardar_eventos: Si le pasamos True, calcula cuentas y eventos y los guarda como csv.
     :return:
     """
     os.chdir(path)
     # Ingresa tipo de distribución al comparar. Pueden ser ambas
 
-    # thres = -5e-3 #Tensiones mayores a este valor (del PMT se observa tensiones negativas) es **ruido**
-
     osci = Osciloscopio('USB0::0x0699::0x0363::C065087::INSTR')
     open("eventos.csv","w").close()
     open("cuentas.csv","w").close()
-    #cuentas = []
+
+    if guardar_eventos:
+        cuentas = list()
+        thres = -5e-3 # Tensiones mayores a este valor (del PMT, que observa tensiones negativas) es **ruido**
+
     for i in range(N):
-        #eventos = []
         osci.setTiempo(escala = escalaT, cero = 0) #No afecta la medición cambiar el cero del tiempo
         osci.setCanal(canal = 1, escala = escalaV, cero = 0)		
-    #print(osci.getCanal(canal = 1))    
-        tiempo, data = osci.getVentana(1); #Mide en el canal 1
+    # print(osci.getCanal(canal = 1))
+        tiempo, data = osci.getVentana(1)
     
         np.savetxt("medicion_{0}.csv".format(i), 
-                   np.vstack((tiempo,data)).T, delimiter=',') #Guarda los datos crudos, separados por ,
-    
+                   np.vstack((tiempo,data)).T, delimiter=',') # Guarda los datos crudos, separados por ","
 
-        #minimos = (np.diff(np.sign(np.diff(data))) > 0).nonzero()[0] + 1  #Mínimos
-        #Elimino tensiones positivas, recodar que la señal del PMT es negativa
-        #for m in minimos:
-        #    if data[m] < thres:
-        #        eventos.append(data[m])
-        #cuentas.append(len(eventos))            
-    #np.savetxt("eventos.csv",eventos, delimiter=',')
-    #np.savetxt("cuentas.csv",cuentas, delimiter=',')
-    
-def generarCuentas(medicionesPath, nMed = 1000, thres = -5e-3):
+        if guardar_eventos:
+            eventos = list()
+            minimos = (np.diff(np.sign(np.diff(data))) > 0).nonzero()[0] + 1
+
+            # Elimino tensiones positivas, recodar que la señal del PMT es negativa
+            for m in minimos:
+                if data[m] < thres:
+                    eventos.append(data[m])
+            cuentas.append(len(eventos))
+
+    if guardar_eventos:
+        np.savetxt("eventos.csv",eventos, delimiter=',')
+        np.savetxt("cuentas.csv",cuentas, delimiter=',')
+
+
+def generarCuentas(medicionesPath, nMed=1000, thres=-5e-3):
     os.chdir(medicionesPath)
     mediciones = []
     for i in os.listdir("."):
@@ -65,7 +72,7 @@ def generarCuentas(medicionesPath, nMed = 1000, thres = -5e-3):
         minimos = (np.diff(np.sign(np.diff(data[:,1]))) > 0).nonzero()[0] + 1  #Mínimos
         cuentas.append(data[data[minimos,1] < thres].shape[0])
     #plt.show()
-    #print(cuentas)            
+    #print(cuentas)
     #np.savetxt("eventos.csv",eventos, delimiter=',')
     #Crear carpeta ./histograma/ y guardar
     try:
