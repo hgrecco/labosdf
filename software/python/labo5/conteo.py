@@ -6,20 +6,25 @@ import scipy.misc
 import os
 import scipy.optimize as opt
 import scipy.stats as stats
-from instrumental import Osciloscopio
+from instrumentos import Osciloscopio
 
 
-#Ingresa el path para guardar los datos
+# Ingresa el path para guardar los datos
 
-def adquirirDatos(path):
+def adquirirDatos(path, N, escalaT=100E-6, escalaV=10E-3):
+    """
+    Adquiere N ventanas de osciloscopio con la escala especificada
+
+    :param path: directorio de trabajo
+    :param N: número de mediciones a realizar
+    :param escalaT: escala de tensión a setear en el osciloscopio
+    :param escalaV: Tiempo de medición. Tiempo en qué integra el osciloscopio. Considerar coherencia
+    :return:
+    """
     os.chdir(path)
-    #Ingresa tipo de distribución al comparar. Pueden ser ambas
+    # Ingresa tipo de distribución al comparar. Pueden ser ambas
 
-    #Parámetros de los experimentos
-    escalaT = 100E-6 #Tiempo de medición. Tiempo en qué integra el osciloscopio. Considerar coherencia
-    escalaV = 10E-3 #Escala de tensión. 
-    #thres = -5e-3 #Tensiones mayores a este valor (del PMT se observa tensiones negativas) es **ruido**
-    N = 10 #Número de experimentos
+    # thres = -5e-3 #Tensiones mayores a este valor (del PMT se observa tensiones negativas) es **ruido**
 
     osci = Osciloscopio('USB0::0x0699::0x0363::C065087::INSTR')
     open("eventos.csv","w").close()
