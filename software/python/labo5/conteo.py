@@ -6,6 +6,7 @@ import scipy.misc
 import os
 import scipy.optimize as opt
 import scipy.stats as stats
+
 from instrumentos import Osciloscopio
 
 
@@ -29,32 +30,32 @@ def adquirirDatos(path, N, escalaT=100E-6, escalaV=10E-3, guardar_eventos=False)
     open("eventos.csv","w").close()
     open("cuentas.csv","w").close()
 
-    if guardar_eventos:
-        cuentas = list()
-        thres = -5e-3 # Tensiones mayores a este valor (del PMT, que observa tensiones negativas) es **ruido**
+    cuentas = list()
+    thres = -5e-3 # Tensiones mayores a este valor (del PMT, que observa tensiones negativas) es **ruido**
 
     for i in range(N):
-        osci.setTiempo(escala = escalaT, cero = 0) #No afecta la medición cambiar el cero del tiempo
-        osci.setCanal(canal = 1, escala = escalaV, cero = 0)		
+        osci.setTiempo(escala=escalaT, cero=0) # No afecta la medición cambiar el cero del tiempo
+        osci.setCanal(canal=1, escala=escalaV, cero=0)
     # print(osci.getCanal(canal = 1))
         tiempo, data = osci.getVentana(1)
     
         np.savetxt("medicion_{0}.csv".format(i), 
                    np.vstack((tiempo,data)).T, delimiter=',') # Guarda los datos crudos, separados por ","
 
-        if guardar_eventos:
-            eventos = list()
-            minimos = (np.diff(np.sign(np.diff(data))) > 0).nonzero()[0] + 1
+        if not guardar_eventos:
+            continue
 
-            # Elimino tensiones positivas, recodar que la señal del PMT es negativa
-            for m in minimos:
-                if data[m] < thres:
-                    eventos.append(data[m])
-            cuentas.append(len(eventos))
+        eventos = list()
+        minimos = (np.diff(np.sign(np.diff(data))) > 0).nonzero()[0] + 1
+        # Elimino tensiones positivas, recodar que la señal del PMT es negativa
+        for m in minimos:
+            if data[m] < thres:
+                eventos.append(data[m])
+        cuentas.append(len(eventos))
 
     if guardar_eventos:
-        np.savetxt("eventos.csv",eventos, delimiter=',')
-        np.savetxt("cuentas.csv",cuentas, delimiter=',')
+        np.savetxt("eventos.csv", eventos, delimiter=',')
+        np.savetxt("cuentas.csv", cuentas, delimiter=',')
 
 
 def generarCuentas(medicionesPath, nMed=1000, thres=-5e-3):
@@ -64,45 +65,47 @@ def generarCuentas(medicionesPath, nMed=1000, thres=-5e-3):
         if i.find('med') != -1:
             mediciones.append(i)
         if len(mediciones) == nMed:
+            # TODO por que hace esto en vez de directamente analizar todos los archivos del directorio?
             break
-    #Listar mediciones
+    # Listar mediciones
     cuentas = []
     for med in mediciones:
         data = np.loadtxt(med, delimiter=',')
         minimos = (np.diff(np.sign(np.diff(data[:,1]))) > 0).nonzero()[0] + 1  #Mínimos
         cuentas.append(data[data[minimos,1] < thres].shape[0])
-    #plt.show()
-    #print(cuentas)
-    #np.savetxt("eventos.csv",eventos, delimiter=',')
-    #Crear carpeta ./histograma/ y guardar
+    # plt.show()
+    # print(cuentas)
+    # np.savetxt("eventos.csv",eventos, delimiter=',')
+    # Crear carpeta ./histograma/ y guardar
     try:
-        os.mkdir('./histograma') #Accedo si existe
+        os.mkdir('./histograma') # Accedo si existe
     except:
         pass
     os.chdir('./histograma')
     
-    np.savetxt("cuentas.csv",cuentas, fmt='%i', delimiter=',')
+    np.savetxt("cuentas.csv", cuentas, fmt='%i', delimiter=',')
     
 
 def correlacion(dataPath):
     data = np.loadtxt(dataPath, delimiter=',')
     data = data[:]
 
-    autocorre = np.correlate(data[:,1],data[:,1],mode="same")
+    autocorre = np.correlate(data[:,1], data[:,1], mode="same")
     
-    plt.plot(data[:,0],data[:,1])
+    plt.plot(data[:,0], data[:,1])
     plt.figure()
     plt.plot(autocorre)
     plt.xlabel("t[s]")
     plt.ylabel('Amp[V]')
     plt.show()
-    
+
+
 def histograma(path):
     
     ### Datos ###
     os.chdir(path)      
-    rawData = np.loadtxt('cuentas.csv', delimiter=',') #carga cuentas.csv. Guardar con savetxt
-    data = rawData[rawData < 20] #Acá podés eliminar cuentas muy altas, producto de malas mediciones
+    rawData = np.loadtxt('cuentas.csv', delimiter=',') # carga cuentas.csv. Guardar con savetxt
+    data = rawData[rawData < 20] #A cá podés eliminar cuentas muy altas, producto de malas mediciones
     data.sort()
     ###
     ### Histograma ###
