@@ -12,14 +12,14 @@ from instrumentos import Osciloscopio
 
 # Ingresa el path para guardar los datos
 
-def adquirirDatos(osci, path, N, escalaT=100E-6, escalaV=10E-3, guardar_eventos=False):
+def adquirir_datos(osci, path, N, escala_temporal=100E-6, escala_tension=10E-3, guardar_eventos=False):
     """
     Adquiere N ventanas de osciloscopio con la escala especificada.
 
     :param path: directorio de trabajo.
     :param N: numero de mediciones a realizar.
-    :param escalaT: escala de tension a setear en el osciloscopio.
-    :param escalaV: Tiempo de medicion. Tiempo en qué integra el osciloscopio. Considerar coherencia.
+    :param escala_temporal: tiempo de medicion. Tiempo en qué integra el osciloscopio. Considerar coherencia.
+    :param escala_tension: escala de tension a setear en el osciloscopio.
     :param guardar_eventos: Si le pasamos True, calcula cuentas y eventos y los guarda como csv.
     :param osci: objeto de tipo instrumentos.Osciloscopio
     :return:
@@ -31,10 +31,10 @@ def adquirirDatos(osci, path, N, escalaT=100E-6, escalaV=10E-3, guardar_eventos=
     thres = -5e-3 # Tensiones mayores a este valor (del PMT, que observa tensiones negativas) es **ruido**
 
     for i in range(N):
-        osci.setTiempo(escala=escalaT, cero=0) # No afecta la medición cambiar el cero del tiempo
-        osci.setCanal(canal=1, escala=escalaV, cero=0)
-    # print(osci.getCanal(canal = 1))
-        tiempo, data = osci.getVentana(1)
+        osci.set_tiempo(escala=escala_temporal, cero=0) # No afecta la medición cambiar el cero del tiempo
+        osci.set_canal(canal=1, escala=escala_tension, cero=0)
+    # print(osci.get_canal(canal = 1))
+        tiempo, data = osci.get_ventana(1)
     
         np.savetxt("medicion_{0}.csv".format(i), 
                    np.vstack((tiempo,data)).T, delimiter=',') # Guarda los datos crudos, separados por ","
@@ -55,7 +55,7 @@ def adquirirDatos(osci, path, N, escalaT=100E-6, escalaV=10E-3, guardar_eventos=
         np.savetxt("cuentas.csv", cuentas, delimiter=',')
 
 
-def generarCuentas(medicionesPath, nMed=1000, thres=-5e-3):
+def generar_cuentas(medicionesPath, nMed=1000, thres=-5e-3):
     os.chdir(medicionesPath)
     mediciones = []
     for i in os.listdir("."):
@@ -102,7 +102,7 @@ def histograma(path):
     ### Datos ###
     os.chdir(path)      
     rawData = np.loadtxt('cuentas.csv', delimiter=',') # carga cuentas.csv. Guardar con savetxt
-    data = rawData[rawData < 20] #A cá podés eliminar cuentas muy altas, producto de malas mediciones
+    data = rawData[rawData < 20] # Aca podés eliminar cuentas muy altas, producto de malas mediciones
     data.sort()
     ###
     ### Histograma ###
@@ -182,8 +182,8 @@ if __name__ == "__main__":
     N = 10
 
     # Adquirimos con los valores por defecto:
-    adquirirDatos(osci, path, N)
+    adquirir_datos(osci, path, N)
 
     # Y ahora adquirimos cambiando algunos parametros y calculando eventos y cuentas:
     path = r"D:\Alumnos\Grupo N\Conteo\Escala nueva"
-    adquirirDatos(osci, path, N, escalaT=200E-6, escalaV=30E-3, guardar_eventos=True)
+    adquirir_datos(osci, path, N, escala_temporal=200E-6, escala_tension=30E-3, guardar_eventos=True)
