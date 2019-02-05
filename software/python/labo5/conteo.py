@@ -12,23 +12,20 @@ from instrumentos import Osciloscopio
 
 # Ingresa el path para guardar los datos
 
-def adquirirDatos(path, N, escalaT=100E-6, escalaV=10E-3, guardar_eventos=False):
+def adquirirDatos(osci, path, N, escalaT=100E-6, escalaV=10E-3, guardar_eventos=False):
     """
-    Adquiere N ventanas de osciloscopio con la escala especificada
+    Adquiere N ventanas de osciloscopio con la escala especificada.
 
     :param path: directorio de trabajo.
     :param N: numero de mediciones a realizar.
     :param escalaT: escala de tension a setear en el osciloscopio.
     :param escalaV: Tiempo de medicion. Tiempo en qué integra el osciloscopio. Considerar coherencia.
     :param guardar_eventos: Si le pasamos True, calcula cuentas y eventos y los guarda como csv.
+    :param osci: objeto de tipo instrumentos.Osciloscopio
     :return:
     """
-    os.chdir(path)
-    # Ingresa tipo de distribución al comparar. Pueden ser ambas
 
-    osci = Osciloscopio('USB0::0x0699::0x0363::C065087::INSTR')
-    open("eventos.csv","w").close()
-    open("cuentas.csv","w").close()
+    os.chdir(path)
 
     cuentas = list()
     thres = -5e-3 # Tensiones mayores a este valor (del PMT, que observa tensiones negativas) es **ruido**
@@ -176,3 +173,17 @@ def histograma(path):
     plt.legend(loc=0,fontsize=20)
     ########
     plt.savefig('log_histograma.png', bbox_inches = 'tight')
+
+if __name__ == "__main__":
+    # Ejemplo de la utilizacion de estas funciones:
+
+    osci = Osciloscopio('USB0::0x0699::0x0363::C065087::INSTR')
+    path = r"D:\Alumnos\Grupo N\Conteo"
+    N = 10
+
+    # Adquirimos con los valores por defecto:
+    adquirirDatos(osci, path, N)
+
+    # Y ahora adquirimos cambiando algunos parametros y calculando eventos y cuentas:
+    path = r"D:\Alumnos\Grupo N\Conteo\Escala nueva"
+    adquirirDatos(osci, path, N, escalaT=200E-6, escalaV=30E-3, guardar_eventos=True)
