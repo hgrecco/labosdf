@@ -6,6 +6,7 @@ import scipy.misc
 import os
 import scipy.optimize as opt
 import scipy.stats as stats
+import pathlib
 
 from instrumentos import Osciloscopio
 
@@ -16,12 +17,12 @@ def adquirir_datos(osci, path, N, escala_temporal=100E-6, escala_tension=10E-3, 
     """
     Adquiere N ventanas de osciloscopio con la escala especificada.
 
+    :param osci: objeto de tipo instrumentos.Osciloscopio
     :param path: directorio de trabajo.
     :param N: numero de mediciones a realizar.
     :param escala_temporal: tiempo de medicion. Tiempo en qué integra el osciloscopio. Considerar coherencia.
     :param escala_tension: escala de tension a setear en el osciloscopio.
     :param guardar_eventos: Si le pasamos True, calcula cuentas y eventos y los guarda como csv.
-    :param osci: objeto de tipo instrumentos.Osciloscopio
     :return:
     """
 
@@ -55,32 +56,54 @@ def adquirir_datos(osci, path, N, escala_temporal=100E-6, escala_tension=10E-3, 
         np.savetxt("cuentas.csv", cuentas, delimiter=',')
 
 
-def generar_cuentas(medicionesPath, nMed=1000, thres=-5e-3):
-    os.chdir(medicionesPath)
-    mediciones = []
-    for i in os.listdir("."):
-        if i.find('med') != -1:
-            mediciones.append(i)
-        if len(mediciones) == nMed:
-            # TODO por que hace esto en vez de directamente analizar todos los archivos del directorio?
-            break
-    # Listar mediciones
+def generar_minimos(mediciones_path, thres=-5e-3):
+    """
+    Abre todos los archivos .csv de la carpeta mediciones_path. Luego calcula minimos para cada csv y guarda en una
+    nueva tabla de datos los valores de tension de dichos minimos.
+
+    :param mediciones_path: Carpeta donde estan guardadas las mediciones en crudo, en formato csv.
+    :param thres: Umbral para la deteccion de minimos
+    :return:
+    """
+    mediciones_path = pathlib.Path(mediciones_path)
+    mediciones = list(mediciones_path.glob('*.csv'))
+
+    eventos = list()
+    for med in mediciones:
+        data = np.loadtxt(med, delimiter=',')
+        minimos = (np.diff(np.sign(np.diff(data[:,1]))) > 0).nonzero()[0] + 1
+        for m in minimos:
+            if data[m] < thres:
+                eventos.append(data[m])
+
+    minimos_path = mediciones_path / "minimos"
+    np.savetxt(minimos_path / "minimos.csv", eventos, fmt='%i', delimiter=',')
+
+
+def generar_cuentas(mediciones_path, thres=-5e-3):
+    """
+    Abre todos los archivos .csv de la carpeta mediciones_path. Luego calcula minimos para cada csv y guarda en una
+    nueva tabla de datos la cantidad de minimos por medicion.
+
+    :param mediciones_path: Carpeta donde estan guardadas las mediciones en crudo, en formato csv.
+    :param thres: Umbral para la deteccion de minimos
+    :return:
+    """
+    mediciones_path = pathlib.Path(mediciones_path)
+    mediciones = list(mediciones_path.glob('*.csv'))
+
     cuentas = []
     for med in mediciones:
         data = np.loadtxt(med, delimiter=',')
-        minimos = (np.diff(np.sign(np.diff(data[:,1]))) > 0).nonzero()[0] + 1  #Mínimos
+        minimos = (np.diff(np.sign(np.diff(data[:,1]))) > 0).nonzero()[0] + 1
         cuentas.append(data[data[minimos,1] < thres].shape[0])
-    # plt.show()
-    # print(cuentas)
     # np.savetxt("eventos.csv",eventos, delimiter=',')
+
     # Crear carpeta ./histograma/ y guardar
-    try:
-        os.mkdir('./histograma') # Accedo si existe
-    except:
-        pass
-    os.chdir('./histograma')
-    
-    np.savetxt("cuentas.csv", cuentas, fmt='%i', delimiter=',')
+    histograma_path = mediciones_path / "histograma"
+    histograma_path.mkdir(exist_ok=True)
+
+    np.savetxt(histograma_path / "cuentas.csv", cuentas, fmt='%i', delimiter=',')
     
 
 def correlacion(dataPath):
