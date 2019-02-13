@@ -11,76 +11,82 @@ import pathlib
 from instrumentos import Osciloscopio
 
 
-# Ingresa el path para guardar los datos
+# Abajo de todo hay ejemplos de como usar algunas funciones
 
-def adquirir_datos(osci, path, N, escala_temporal=100E-6, escala_tension=10E-3, guardar_eventos=False):
+def adquirir_y_graficar(osci):
     """
-    Adquiere N ventanas de osciloscopio con la escala especificada.
+    Adquiere una pantalla de osciloscopio y grafica los datos
+
+    :param osci: objeto de tipo Osciloscopio
+    """
+    tiempo, data = osci.get_ventana(1)
+    plt.figure()
+    plt.plot(tiempo, data)
+
+    return tiempo, data
+
+
+def adquirir_y_guardar(osci, path, filename):
+    """
+    Adquiere una pantalla de osciloscopio y guarda los datos en formato csv.
+
+    :param osci: objeto de tipo osciloscopio
+    :param path: string con la ruta donde guardar los datos.
+    :param filename: string con el nombre que va a tener el archivo.
+    """
+    os.chdir(path)
+    tiempo, data = osci.get_ventana(1)
+    np.savetxt(filename, np.vstack((tiempo, data)).T, delimiter=',')  # Guarda los datos crudos, separados por ","
+
+    return tiempo, data
+
+
+def adquirir_guardar_multiples(osci, path, n):
+    """
+    Adquiere n pantallas y las guarda como csv.
+
+    :param osci: objeto de tipo osciloscopio
+    :param path: string con la ruta donde guardar los datos.
+    :param n: numero de pantallas a adquirir
+    """
+    for i in range(n):
+        filename = "medicion_{0}.csv".format(n)
+        adquirir_y_guardar(osci, path, filename)
+
+
+def adquirir_cuentas_eventos(osci, path, n, thres=-5e-3):
+    """
+    Adquiere n pantallas y guarda solo los eventos (valores de tension detectados como minimos) y cuentas (cantidad
+    de minimos por pantalla)
 
     :param osci: objeto de tipo instrumentos.Osciloscopio
-    :param path: directorio de trabajo.
-    :param N: numero de mediciones a realizar.
-    :param escala_temporal: tiempo de medicion. Tiempo en qué integra el osciloscopio. Considerar coherencia.
-    :param escala_tension: escala de tension a setear en el osciloscopio.
-    :param guardar_eventos: Si le pasamos True, calcula cuentas y eventos y los guarda como csv.
-    :return:
+    :param path: string con la ruta donde guardar los datos.
+    :param n: numero de mediciones a realizar.
+    :param thresh: umbral de tension. Tensiones mayores a este valor (del PMT, que observa tensiones negativas) son
+    **ruido**
     """
 
     os.chdir(path)
 
     cuentas = list()
-    thres = -5e-3 # Tensiones mayores a este valor (del PMT, que observa tensiones negativas) es **ruido**
+    eventos = list()
 
-    for i in range(N):
-        osci.set_tiempo(escala=escala_temporal, cero=0) # No afecta la medición cambiar el cero del tiempo
-        osci.set_canal(canal=1, escala=escala_tension, cero=0)
-    # print(osci.get_canal(canal = 1))
-        tiempo, data = osci.get_ventana(1)
-    
-        np.savetxt("medicion_{0}.csv".format(i), 
-                   np.vstack((tiempo,data)).T, delimiter=',') # Guarda los datos crudos, separados por ","
+    for i in range(n):
+        filename = "medicion_{0}.csv".format(n)
+        tiempo, data = adquirir_y_guardar(osci, path, filename)
 
-        if not guardar_eventos:
-            continue
-
-        eventos = list()
         minimos = (np.diff(np.sign(np.diff(data))) > 0).nonzero()[0] + 1
         # Elimino tensiones positivas, recodar que la señal del PMT es negativa
         for m in minimos:
             if data[m] < thres:
                 eventos.append(data[m])
-        cuentas.append(len(eventos))
+        cuentas.append(data[data[minimos, 1] < thres].shape[0])  # Calculo la cantidad de minimos que hubo en una medicion
 
-    if guardar_eventos:
-        np.savetxt("eventos.csv", eventos, delimiter=',')
-        np.savetxt("cuentas.csv", cuentas, delimiter=',')
-
-
-def generar_minimos(mediciones_path, thres=-5e-3):
-    """
-    Abre todos los archivos .csv de la carpeta mediciones_path. Luego calcula minimos para cada csv y guarda en una
-    nueva tabla de datos los valores de tension de dichos minimos.
-
-    :param mediciones_path: Carpeta donde estan guardadas las mediciones en crudo, en formato csv.
-    :param thres: Umbral para la deteccion de minimos
-    :return:
-    """
-    mediciones_path = pathlib.Path(mediciones_path)
-    mediciones = list(mediciones_path.glob('*.csv'))
-
-    eventos = list()
-    for med in mediciones:
-        data = np.loadtxt(med, delimiter=',')
-        minimos = (np.diff(np.sign(np.diff(data[:,1]))) > 0).nonzero()[0] + 1
-        for m in minimos:
-            if data[m] < thres:
-                eventos.append(data[m])
-
-    minimos_path = mediciones_path / "minimos"
-    np.savetxt(minimos_path / "minimos.csv", eventos, fmt='%i', delimiter=',')
+    np.savetxt("eventos.csv", eventos, delimiter=',')
+    np.savetxt("cuentas.csv", cuentas, delimiter=',')
 
 
-def generar_cuentas(mediciones_path, thres=-5e-3):
+def generar_cuentas_eventos(mediciones_path, thres=-5e-3):
     """
     Abre todos los archivos .csv de la carpeta mediciones_path. Luego calcula minimos para cada csv y guarda en una
     nueva tabla de datos la cantidad de minimos por medicion.
@@ -92,19 +98,25 @@ def generar_cuentas(mediciones_path, thres=-5e-3):
     mediciones_path = pathlib.Path(mediciones_path)
     mediciones = list(mediciones_path.glob('*.csv'))
 
-    cuentas = []
+    cuentas = list()
+    eventos = list()
     for med in mediciones:
         data = np.loadtxt(med, delimiter=',')
         minimos = (np.diff(np.sign(np.diff(data[:,1]))) > 0).nonzero()[0] + 1
-        cuentas.append(data[data[minimos,1] < thres].shape[0])
-    # np.savetxt("eventos.csv",eventos, delimiter=',')
+        cuentas.append(data[data[minimos,1] < thres].shape[0]) # Calculo la cantidad de minimos que hubo en una medicion
 
+        for m in minimos:
+            if data[m] < thres:
+                eventos.append(data[m])
     # Crear carpeta ./histograma/ y guardar
     histograma_path = mediciones_path / "histograma"
     histograma_path.mkdir(exist_ok=True)
 
     np.savetxt(histograma_path / "cuentas.csv", cuentas, fmt='%i', delimiter=',')
-    
+    np.savetxt(histograma_path / "eventos.csv", eventos, fmt='%i', delimiter=',')
+
+    return cuentas, eventos
+
 
 def correlacion(dataPath):
     data = np.loadtxt(dataPath, delimiter=',')
