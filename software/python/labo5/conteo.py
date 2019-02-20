@@ -110,33 +110,29 @@ def histograma(path):
     
     ### Datos ###
     os.chdir(path)      
-    rawData = np.loadtxt('cuentas.csv', delimiter=',')
-    data = rawData[rawData < 20] # Aca podés eliminar cuentas muy altas, producto de malas mediciones
+    data = np.loadtxt('cuentas.csv', delimiter=',')
     data.sort()
     
     ### Histograma ###
-    hist, bins = np.histogram(data,bins = np.arange(np.max(data)), density = True)
+    hist, bins = np.histogram(data, bins=np.arange(np.max(data)), density=True)
     bins = bins[:-1]
 
     ### Ajuste ###
-    ### Fuciones de ayuda ###
-    poissonPDF = lambda j, lambd: (lambd**j) * np.exp(-lambd) / scipy.misc.factorial(j)
-    bePDF = lambda j, lambd: np.power(lambd, j) / np.power(1+lambd,1+j)
 
-    pPoisson, pconv = opt.curve_fit(poissonPDF, bins, hist, p0 = 3)
-    pBE, pconv = opt.curve_fit(bePDF, bins, hist, p0 = 3)
+    p_poisson, pconv = opt.curve_fit(poisson, bins, hist, p0=3)
+    p_bose_einstein, pconv = opt.curve_fit(bose_einstein, bins, hist, p0=3)
     with open('p-valor','w+') as f:
-        f.write("Poisson p-value: {}\n".format(stats.chisquare(hist,poissonPDF(bins,pPoisson),ddof = 1)[1]))
-        f.write("BE p-value: {}".format(stats.chisquare(hist,bePDF(bins,pBE),ddof = 1)[1]))
+        f.write("Poisson p-value: {}\n".format(stats.chisquare(hist, poisson(bins, p_poisson), ddof = 1)[1]))
+        f.write("BE p-value: {}".format(stats.chisquare(hist, bose_einstein(bins, p_bose_einstein), ddof = 1)[1]))
     
     ### Ploteo ###
     width = 24 / 2.54 #24cm de ancho
-    figSize = (width * (1+np.sqrt(5)) / 2, width) #relación aurea
+    fig_size = (width * (1+np.sqrt(5)) / 2, width) #relación aurea
     
     #Figura 1    
-    plt.figure(figsize=figSize)
-    plt.plot(poissonPDF(bins,pPoisson), 'r^', label='Poisson', markersize = 10) #azul
-    plt.plot(bePDF(bins,pBE), 'go', label = 'BE', markersize = 10) #verde
+    plt.figure(figsize=fig_size)
+    plt.plot(poisson(bins, p_poisson), 'r^', label='Poisson', markersize = 10) #azul
+    plt.plot(bose_einstein(bins, p_bose_einstein), 'go', label ='BE', markersize = 10) #verde
     plt.bar(bins,hist, width = 0.1,label='Datos')    
 
     plt.grid()
@@ -149,22 +145,22 @@ def histograma(path):
 
     ### Texto a agregar ###
     text = 'Poisson\n'
-    text += r'$<n> = {0:.2f}$'.format(pPoisson[0])
+    text += r'$<n> = {0:.2f}$'.format(p_poisson[0])
     text += '\n'
     text += r'$\chi^2_{{ \nu = {0} }} = {1:.3f}$'.format(hist.size, poissonChisq)
     text += '\n\n'
     text += 'BE\n'
-    text += r'$<n> = {0:.2f}$'.format(pBE[0])
+    text += r'$<n> = {0:.2f}$'.format(p_bose_einstein[0])
     text += '\n'
     text += r'$\chi^2_{{ \nu = {0} }} = {1:.2f}$'.format(hist.size, beChisq)
     plt.text(0.7,0.3, text, transform = plt.gca().transAxes, fontsize = fontSize)
 
-    plt.legend(loc=0,fontsize=20)
+    plt.legend(loc=0, fontsize=20)
     plt.savefig('histograma.png', bbox_inches = 'tight')
     
-    plt.figure(2,figsize=figSize)
-    plt.plot(np.log(poissonPDF(bins,pPoisson)), 'r^', label='Log(Poisson)', markersize = 10) #azul
-    plt.plot(np.log(bePDF(bins,pBE)), 'go', label = 'Log(BE)', markersize = 10) #verde
+    plt.figure(2, figsize=fig_size)
+    plt.plot(np.log(poisson(bins, p_poisson)), 'r^', label='Log(Poisson)', markersize = 10) #azul
+    plt.plot(np.log(bose_einstein(bins, p_bose_einstein)), 'go', label ='Log(BE)', markersize = 10) #verde
     plt.plot(bins,np.log(hist),'bd',label='Log(Datos)', markersize = 10)    
 
     plt.grid()
@@ -177,6 +173,15 @@ def histograma(path):
     plt.legend(loc=0,fontsize=20)
 
     plt.savefig('log_histograma.png', bbox_inches = 'tight')
+
+
+def poisson(lambd, j):
+    return (lambd**j) * np.exp(-lambd) / scipy.misc.factorial(j)
+
+
+def bose_einstein(lambd, j):
+    return np.power(lambd, j) / np.power(1+lambd,1+j)
+
 
 if __name__ == "__main__":
     # Ejemplo de la utilizacion de estas funciones:
