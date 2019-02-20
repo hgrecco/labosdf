@@ -70,6 +70,7 @@ def generar_cuentas_eventos(mediciones_path, thres=-5e-3):
     cuentas = list()
     eventos = list()
     for med in mediciones:
+        print(med)
         data = np.loadtxt(med, delimiter=',')
         tension = data[:,1]
         # Para buscar minimos, usamos la funcion find_peaks de scipy.signal. Notar que multiplicamos por -1 al vector
@@ -196,5 +197,13 @@ if __name__ == "__main__":
     adquirir_guardar_multiples(osci, path, n)
 
     # Generamos cuentas y eventos a partir de mediciones ya hechas:
-    mediciones_path = r"D:\Alumnos\Grupo N\Conteo\Mediciones"
-    generar_cuentas_eventos(mediciones_path, thres=0)
+    mediciones_path = r"C:\Users\Admin\Desktop\Datos labo 5\med6"
+    cuentas, eventos = generar_cuentas_eventos(mediciones_path, thres=0)
+    
+    plt.figure()
+    plt.hist(eventos)
+    plt.title("Eventos")
+    
+    plt.figure()
+    plt.hist(cuentas)
+    plt.title("Cuentas")
