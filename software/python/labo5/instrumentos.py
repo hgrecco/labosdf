@@ -1,5 +1,6 @@
 import visa
 import numpy as np
+import matplotlib.pyplot as plt
 
 class Lockin(object):
     """Clase para el manejo amplificador Lockin SR830 usando PyVISA de interfaz."""
@@ -65,8 +66,7 @@ class Lockin(object):
             self._lockin.write("DDEF 1,1") #Canal 1, RTheta
             orden += "3, 4" # SNAP? 3, 4
         return self._lockin.query_ascii_values(orden, separator=",")
-        
-        
+
 
 class Osciloscopio(object):
     """Clase para el manejo osciloscopio TDS2000 usando PyVISA de interfaz"""
@@ -129,3 +129,12 @@ class Osciloscopio(object):
                                                container=np.array) - yoff) * ymu + yze        
         tiempo = xze + np.arange(len(data)) * xin
         return tiempo, data
+
+
+if __name__ == "__main__":
+    # Ejemplo de la utilización de la clase Osciloscopio:
+
+    osci = Osciloscopio('USB0::0x0699::0x0363::C065087::INSTR')
+    tiempo, data = osci.get_ventana(1)
+    plt.figure()
+    plt.plot(tiempo, data)
