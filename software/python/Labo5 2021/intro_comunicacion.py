@@ -27,6 +27,10 @@ fungen.query('OUTPut1:STATe?')
 #habilito la salida
 fungen.write('OUTPut1:STATe 1')
 fungen.query('OUTPut1:STATe?')
+#le pregunto la impedancia de carga seteada
+fungen.write('OUTPUT1:IMPEDANCE?')
+
+
 
 #inicializo el osciloscopio
 osci = rm.open_resource('USB0::0x0699::0x0363::C108013::INSTR')
@@ -36,6 +40,9 @@ osci.query('*IDN?')
 osci.query('CH1?')
 #le pregunto la conf horizontal
 osci.query('HOR?')
+#le pregunto la punta de osciloscopio seteada
+osci.query('CH2:PRObe?')
+
 
 #Seteo de canal
 channel=1
@@ -62,6 +69,7 @@ scale = 2e-1
 osci.write("CH{0}:SCA {1}".format(channel, scale))
 osci.write("CH{0}:POS {1}".format(channel, zero))
 
+#seteo escala horizontal
 scale = 200e-6
 osci.write("HOR:SCA {0}".format(scale))
 osci.write("HOR:POS {0}".format(zero))	
@@ -85,35 +93,35 @@ escalas temporales (s)
 """
 
 
-
+#le pido los valores de la pantalla (0:255)
 data = osci.query_binary_values('CURV?', datatype='B',container=np.array)
 plt.plot(data)
 
+#le pido los parametros de la pantalla
 xze, xin, yze, ymu, yoff = osci2.query_ascii_values('WFMPRE:XZE?;XIN?;YZE?;YMU?;YOFF?;', separator=';') 
 xze
 xin
 
 
-
-
-
-
-
+# Conexion usando clases
 from instrumental import AFG3021B
 from instrumental import TDS1002B
 
+#osciloscopio
 osci = TDS1002B('USB0::0x0699::0x0363::C108013::INSTR')
 osci.get_time()
 osci.set_time(scale = 1e-3)
 osci.set_channel(1,scale = 1)
 tiempo, data = osci.read_data(channel = 1)
 plt.plot(tiempo,data)
+plt.xlabel('Tiempo [s]')
+plt.ylabel('Voltaje [V]')
 
+#generador de funciones
 fungen = AFG3021B(name = 'USB0::0x0699::0x0346::C033250::INSTR')
 fungen.getFrequency()
 
-
-#barrido
+#barrido de frecuencia
 for freq in range(1000,5000,1000):
     print(freq)
     fungen.setFrequency(freq)
@@ -121,4 +129,4 @@ for freq in range(1000,5000,1000):
     tiempo, data = osci.read_data(channel = 1)
     plt.plot(tiempo,data)
     plt.xlabel('Tiempo [s]')
-    plt.ylabel('Voltaje [v]')
+    plt.ylabel('Voltaje [V]')

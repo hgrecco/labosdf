@@ -99,4 +99,8 @@ class TDS1002B:
         tiempo = xze + np.arange(len(data)) * xin
         return tiempo, data
     
-    
+    def get_range(self, channel):
+        xze, xin, yze, ymu, yoff = self._osci.query_ascii_values('WFMPRE:XZE?;XIN?;YZE?;YMU?;YOFF?;', 
+                                                                 separator=';')         
+        rango = (np.array((0, 255))-yoff)*ymu +yze
+        return rango    
