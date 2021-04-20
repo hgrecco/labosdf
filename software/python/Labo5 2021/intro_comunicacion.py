@@ -9,7 +9,7 @@ rm = visa.ResourceManager()
 rm.list_resources()
 
 #inicializo generador de funciones
-fungen = rm.open_resource('USB0::0x0699::0x0346::C033250::INSTR')
+fungen = rm.open_resource('USB0::0x0699::0x0346::C034198::INSTR')
 #le pregunto su identidad
 fungen.query('*IDN?')
 #le pregunto la freq
@@ -28,12 +28,12 @@ fungen.query('OUTPut1:STATe?')
 fungen.write('OUTPut1:STATe 1')
 fungen.query('OUTPut1:STATe?')
 #le pregunto la impedancia de carga seteada
-fungen.write('OUTPUT1:IMPEDANCE?')
+fungen.query('OUTPUT1:IMPEDANCE?')
 
 
 
 #inicializo el osciloscopio
-osci = rm.open_resource('USB0::0x0699::0x0363::C108013::INSTR')
+osci = rm.open_resource('USB0::0x0699::0x0363::C102223::INSTR')
 #le pregunto su identidad
 osci.query('*IDN?')
 #le pregunto la conf del canal (1|2)
@@ -98,9 +98,12 @@ data = osci.query_binary_values('CURV?', datatype='B',container=np.array)
 plt.plot(data)
 
 #le pido los parametros de la pantalla
-xze, xin, yze, ymu, yoff = osci2.query_ascii_values('WFMPRE:XZE?;XIN?;YZE?;YMU?;YOFF?;', separator=';') 
+xze, xin, yze, ymu, yoff = osci.query_ascii_values('WFMPRE:XZE?;XIN?;YZE?;YMU?;YOFF?;', separator=';') 
 xze
 xin
+#voltaje = (data - yoff) * ymu + yze 
+#tiempo = xze + np.arange(len(data)) * xin
+
 
 
 # Conexion usando clases
@@ -108,17 +111,17 @@ from instrumental import AFG3021B
 from instrumental import TDS1002B
 
 #osciloscopio
-osci = TDS1002B('USB0::0x0699::0x0363::C108013::INSTR')
+osci = TDS1002B('USB0::0x0699::0x0363::C102223::INSTR')
 osci.get_time()
 osci.set_time(scale = 1e-3)
-osci.set_channel(1,scale = 1)
+osci.set_channel(1,scale = 2)
 tiempo, data = osci.read_data(channel = 1)
 plt.plot(tiempo,data)
 plt.xlabel('Tiempo [s]')
 plt.ylabel('Voltaje [V]')
 
 #generador de funciones
-fungen = AFG3021B(name = 'USB0::0x0699::0x0346::C033250::INSTR')
+fungen = AFG3021B(name = 'USB0::0x0699::0x0346::C034198::INSTR')
 fungen.getFrequency()
 
 #barrido de frecuencia
