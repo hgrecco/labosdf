@@ -2,7 +2,114 @@ import visa
 import numpy as np
 import time
 
+class HantekPPS2320A:
+"""
+Fuente DC
+Send Command Word	Perform Operation
+a + line break (Hereafter, every command must take 0x0a as the line break to over, ignore the following)	Back to device model
+suXXXX	CH1 preset output voltage, units V; e.g. 1200 stands for 12.00V
+siXXXX 	CH1 preset output current, units A; e.g. 2500 stands for 2.500A
+saXXXX	CH2 preset output voltage, units V; e.g. 1200 stands for 12.00V
+sdXXXX	CH2 preset output current, units A; e.g. 2500 stands for 2.500A
+O0	Output indicator light switch-off
+O1	Output indicator light switch-on
+O2	Parallel, series, trace, output indicator light switch-off
+O3	Series, trace, output indicator switch-off; Parallel indicator light switch-on
+O4	Parallel, trace, output indicator switch-off; Series indicator light switch-on
+O5	Parallel, series, output indicator switch-off; Trace indicator light switch-on
+O6	CH1 indicator light switch-on
+O7	CH2 indicator light switch-on
+O8	CH3 3.3V indicator light switch-on
+O9	CH3 5V indicator light switch-on
+Oa	CH3 2.5V indicator light switch-on
+rv	Read the measured voltage of CH1
+ra	Read the measured current of CH1
+ru	Read the preset voltage of CH1
+ri	Read the preset current of CH1
+rh	Read the measured voltage of CH2
+rj	Read the measured current of CH2
+rk	Read the preset voltage of CH2
+rq	Read the preset current of CH2
+rm	Read the device working mode
+rl	Read lock state
+rp	Read CH2 state
+rs	Read CH1 state
+rb	Read CH3 state	
+"""    
+    def __init__(self, resource):
+        self._fuente = visa.ResourceManager().open_resource(resource)
+        print(self._fuente.query('*IDN?'))
+                
+    def set_voltage1(self, value):
+        if value > 3:
+            raise ValueError("El valor no puede ser mayor que 3")
+        self._fuente.write("su{0:04d}".format(round(value*100)))
 
+
+class SR830(object):
+    '''Clase para el manejo amplificador Lockin SR830 usando PyVISA de interfaz'''
+    
+    def __init__(self,resource):
+        self._lockin = visa.ResourceManager().open_resource(resource)
+        print(self._lockin.query('*IDN?'))
+        self._lockin("LOCL 2") #Bloquea el uso de teclas del Lockin
+        
+    def __del__(self):
+        self._lockin("LOCL 0") #Desbloquea el Lockin
+        self._lockin.close()
+        
+    def setModo(self, modo):
+        '''Selecciona el modo de medición, A, A-B, I, I(10M)'''
+        self._lockin.write("ISRC {0}".format(modo))
+        
+    def setFiltro(self, sen, tbase, slope):
+        '''Setea el filtro de la instancia'''
+        #Página 90 (5-4) del manual
+        self._lockin.write("OFLS {0}".format(slope))
+        self._lockin.write("OFLT {0}".format(tbase)) 
+        self._lockin.write("SENS {0}".format(sen)) 
+        
+    def setAuxOut(self, auxOut = 1, auxV = 0):
+        '''Setea la tensión de salida de al Aux Output indicado.
+        Las tensiones posibles son entre -10.5 a 10.5'''
+        self._lockin.write('AUXV {0}, {1}'.format(auxOut, auxV))
+            
+    def setReferencia(self,isIntern, freq, vRef = 1):
+        if isIntern:
+            #Referencia interna
+            #Configura la referencia si es así
+            self._lockin.write("FMOD 1")
+            self._lockin.write("SLVL {0:f}".format(voltaje))
+            self._lockin.write("FREQ {0:f}".format(freq))
+        else:
+            #Referencia externa
+            self._lockin.write("FMOD 0")
+            
+    def setDisplay(self, isXY):
+        if isXY:
+            self._lockin.write("DDEF 1, 0") #Canal 1, x
+            self._lockin.write('DDEF 2, 0') #Canal 2, y
+        else:
+            self._lockin.write("DDEF 1,1") #Canal 1, R
+            self._lockin.write('DDEF 2,1') #Canal 2, T
+    
+    def getDisplay(self):
+        '''Obtiene la medición que acusa el display. 
+        Es equivalente en resolución a la medición de los parámetros con SNAP?'''
+        orden = "SNAP? 10, 11"
+        return self._lockin.query_ascii_values(orden, separator=",")
+        
+    def getMedicion(self,isXY = True):
+        '''Obtiene X,Y o R,Ang, dependiendo de isXY'''
+        orden = "SNAP? "
+        if isXY:
+            self._lockin.write("DDEF 1,0") #Canal 1, XY
+            orden += "1, 2" #SNAP? 1,2
+        else:
+            self._lockin.write("DDEF 1,1") #Canal 1, RTheta
+            orden += "3, 4" #SNAP? 3, 4
+        return self._lockin.query_ascii_values(orden, separator=",")
+		
 class AFG3021B:
     
     def __init__(self, name='USB0::0x0699::0x0346::C034165::INSTR'):
