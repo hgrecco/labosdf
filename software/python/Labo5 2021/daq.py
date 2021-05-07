@@ -12,6 +12,14 @@ system = nidaqmx.system.System.local()
 for device in system.devices:
     print(device)
 
+#para setear (y preguntar) el modo y rango de un canal analógico
+with nidaqmx.Task() as task:
+    ai_channel = task.ai_channels.add_ai_voltage_chan("Dev1/ai1",max_val=10,min_val=-10)
+    print(ai_channel.ai_term_cfg)    
+    print(ai_channel.ai_max)
+    print(ai_channel.ai_min)	
+	
+
 ## Medicion por tiempo/samples de una sola vez
 def medir(duracion, fs):
     cant_puntos = duracion*fs    
