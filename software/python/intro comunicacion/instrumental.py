@@ -167,6 +167,9 @@ class TDS1002B:
 		
         #Bloquea el control del osciloscopio
         self._osci.write("LOC")
+    
+	def __del__(self):
+        self._osci.close()			
 
     def unlock(self):
          #Desbloquea el control del osciloscopio
@@ -210,4 +213,55 @@ class TDS1002B:
         xze, xin, yze, ymu, yoff = self._osci.query_ascii_values('WFMPRE:XZE?;XIN?;YZE?;YMU?;YOFF?;', 
                                                                  separator=';')         
         rango = (np.array((0, 255))-yoff)*ymu +yze
-        return rango    
+        return rango   
+
+class Agilent34970A:
+    """Clase para el manejo multiplexor Agilent34970A usando PyVISA de interfaz
+    """
+    def __init__(self, name):
+        self._mux = visa.ResourceManager().open_resource(name)
+        self._mux.query("*IDN?")
+
+    	#Configuración de barrido
+		self.ScanInterval = 1
+		self.channelDelay = 0.2
+		self.canales = (101,102,103,104,105,106,107, 108)
+		self.ncanales = len(self.canales)
+
+		self._mux.write('ROUTE:SCAN', '(@' + str(self.canales)[1:])
+		self._mux.write('ROUT:CHAN:DELAY ' + str(self.channelDelay))
+		self._mux.write('FORMAT:READING:CHAN ON') #Return channel number with each reading
+		self._mux.write('FORMAT:READING:TIME ON') # Return time stamp with each reading
+		#self._mux.write('FORMat:READing:TIME:TYPE  RELative') #Return time stamp im seconds since scanstart
+		self._mux.write('FORMat:READing:TIME:TYPE  ABSolute') #Return time stamp absolute
+		self._mux.write('FORMat:READing:UNIT OFF')
+		self._mux.write('TRIG:TIMER ' + str(self.ScanInterval))		
+		self._mux.write('TRIG:COUNT ' + str(1)) # one scan sweep per measure
+
+    def __del__(self):
+        self._mux.close()		
+	
+	def get_time(self):	
+		a = self._mux.query_ascii_values('SYSTEM:TIME?') #pido la hora de inicio			
+        return float(a[0])*3600+float(a[1])*60+a[2]	
+	
+	def one_scan(self):
+		t0 = self._mux.query('INIT;:SYSTEM:TIME:SCAN?')		
+
+		time.sleep(.5+(self.channelDelay+0.1)*self.ncanales)
+
+		%query number of datapoints per scan
+		Ndata=int(self._mux.query('DATA:POINTS?'))
+
+		data = []
+		time = []
+		chan = []
+		for ind in range(Ndata):
+			str=self._mux.query(mux,'DATA:REMOVE? 1');
+			d,t,ch = str.splot(',')
+			data.append(d)
+			time.append(t)
+			chan.append(ch)
+		
+		return data,time,chan
+		
