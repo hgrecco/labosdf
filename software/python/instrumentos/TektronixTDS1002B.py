@@ -40,6 +40,9 @@ data = osci.query_binary_values('CURV?', datatype='B', container=np.array)
 
 tiempo = xze + np.arange(len(data)) * xin
 
+# Queda como ejercicio aplicarle la escala a "data" para que quede en las unidades correspondientes, al igual que
+# hicimos con "tiempo"
+
 plt.plot(tiempo, data)
 plt.xlabel('Tiempo [s]')
 plt.ylabel('Voltaje [V]')
